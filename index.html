@@ -1,0 +1,1305 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Kotlin Coroutines</title>
+
+    <link rel="stylesheet" href="dist/reset.css">
+    <link rel="stylesheet" href="dist/reveal.css">
+    <link rel="stylesheet" href="dist/theme/black.css">
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="plugin/highlight/monokai.css">
+</head>
+<body>
+<div class="reveal">
+    <div class="slides">
+        <section
+                data-background="https://images.pexels.com/photos/2387533/pexels-photo-2387533.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2">
+            <p style="font-size:60px;">Building the Kotlin Coroutines Framework from Scratch</p>
+            <p>By Omkar Tenkale - Android Engineer @Gojek</p>
+        </section>
+        <section data-auto-animate>suspend fun</section>
+
+        <section><img src="/img/cannot-call-suspend-fun.png" width="800" height="350" ></section>
+        <section><img src="/img/cannot-call-suspend-fun-in-launch.png"Z ></section>
+
+
+        <section data-auto-animate><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers> <script type="text/template">
+
+                fun main(){
+
+                }
+
+                suspend fun greet() {
+                    println("Hello!")
+                }
+
+        		</script></code></pre></section>
+
+        <section style="width: 110%; margin-left: -50px; font-size: 32px;" data-auto-animate><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers> <script type="text/template">
+
+fun main() {
+    ::greet.createCoroutineUnintercepted()
+}
+
+suspend fun greet() {
+    println("Hello!")
+}
+        		</script></code></pre></section>
+
+        <section style="width: 110%; margin-left: -50px; font-size: 32px;"><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers="1-4"> <script type="text/template">
+
+@SinceKotlin("1.3")
+public expect fun <T> (suspend () -> T).createCoroutineUnintercepted(
+    completion: Continuation<T>
+): Continuation<Unit>
+
+@SinceKotlin("1.3")
+public expect fun <R, T> (suspend R.() -> T).createCoroutineUnintercepted(
+    receiver: R,
+    completion: Continuation<T>
+): Continuation<Unit>
+
+        		</script></code></pre></section>
+
+<!--        <section><img src="/img/create-coroutine-declaration.png"Z ></section>-->
+
+        <section><img src="/img/continuation-declaration.png"Z ></section>
+
+        <section style="width: 110%; margin-left: -50px; font-size: 30px;" data-auto-animate><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers="6-15|6|7|8|9|10|12|16"> <script type="text/template">
+import kotlin.coroutines.intrinsics.createCoroutineUnintercepted
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.EmptyCoroutineContext
+
+fun main() {
+    val completionCallback = object : Continuation<Unit> {
+        override val context = EmptyCoroutineContext
+        override fun resumeWith(result: Result<Unit>) {
+            if(result.isSuccess) {
+                println("suspend function returned:  ${result.getOrNull()}")
+            }else{
+                println("suspend function threw an exception ${result.exceptionOrNull()}")
+            }
+        }
+    }
+    ::greet.createCoroutineUnintercepted(completionCallback)
+}
+
+suspend fun greet() {
+    println("Hello!")
+}
+        		</script></code></pre></section>
+
+        <section style="width: 110%; margin-left: -50px; font-size: 30px;" data-auto-animate><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers="16|1-22"> <script type="text/template">
+import kotlin.coroutines.intrinsics.createCoroutineUnintercepted
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.EmptyCoroutineContext
+
+fun main() {
+    val completionCallback = object : Continuation<Unit> {
+        override val context = EmptyCoroutineContext
+        override fun resumeWith(result: Result<Unit>) {
+            if(result.isSuccess) {
+                println("suspend function returned:  ${result.getOrNull()}")
+            }else{
+                println("suspend function threw an exception ${result.exceptionOrNull()}")
+            }
+        }
+    }
+    ::greet.createCoroutineUnintercepted(completionCallback).resumeWith(Result.success(Unit))
+}
+
+suspend fun greet() {
+    println("Hello!")
+}
+        		</script></code></pre></section>
+
+<!--        Why call suspend function-->
+        <section>Why?</section>
+
+
+        <section data-auto-animate><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers> <script type="text/template">
+
+                fun main(){
+
+                }
+
+                suspend fun greet() {
+                    println("Hello!")
+                }
+
+
+        		</script></code></pre></section>
+
+        <section data-auto-animate><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers> <script type="text/template">
+
+                fun main(){
+
+                }
+
+                fun greet() {
+                    println("Hello!")
+                }
+
+
+        		</script></code></pre></section>
+
+        <section data-auto-animate><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers="1-7|5-7"> <script type="text/template">
+
+                fun main(){
+                    greet()
+                }
+
+                fun greet() {
+                    println("Hello!")
+                }
+
+        		</script></code></pre></section>
+
+        <section data-auto-animate><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers> <script type="text/template">
+
+                fun main(){
+                    doSomething()
+                }
+
+                suspend fun doSomething(){
+                    doSomethingElse()
+                    doSomethingElse()
+                }
+
+                suspend fun doSomethingElse() {
+                    println("Hello!")
+                }
+
+       </script></code></pre></section>
+
+        <section data-auto-animate><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers> <script type="text/template">
+
+                fun main(){
+                    doSomething()
+                }
+
+                suspend fun doSomething(){
+                    doSomethingElse()
+                    doSomethingElse()
+                }
+
+                suspend fun doSomethingElse() {
+                    Toast.makeText(..)
+                }
+
+       </script></code></pre></section>
+        <section data-auto-animate><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers> <script type="text/template">
+
+                fun main(){
+                    doSomething()
+                }
+
+                suspend fun doSomething(){
+                    doSomethingElse()
+                    doSomethingElse()
+                }
+
+                suspend fun doSomethingElse() {
+                    File("...").readContents()
+                }
+
+       </script></code></pre></section>
+        <section data-auto-animate><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers> <script type="text/template">
+
+                fun main(){
+                    doSomething()
+                }
+
+                suspend fun doSomething(){
+                    doSomethingElse()
+                    doSomethingElse()
+                }
+
+                suspend fun doSomethingElse() {
+                    db.deleteAllMessages()
+                }
+
+       </script></code></pre></section>
+
+        <section data-auto-animate><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers> <script type="text/template">
+
+                fun main(){
+                    doSomething()
+                }
+
+                suspend fun doSomething(){
+                    doSomethingElse()
+                    doSomethingElse()
+                }
+
+                suspend fun doSomethingElse() {
+                    doSomething()
+                }
+
+       </script></code></pre></section>
+
+        <section data-auto-animate><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers> <script type="text/template">
+
+                fun main(){
+                    doSomething()
+                }
+
+                suspend fun doSomething(){
+                    doSomethingElse()
+                    doSomethingElse()
+                }
+
+                fun doSomethingElse() {
+                    doSomething()
+                }
+
+       </script></code></pre></section>
+
+        <section data-auto-animate><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers> <script type="text/template">
+
+                fun main(){
+                    doSomething()
+                }
+
+                fun doSomething(){
+                    doSomethingElse()
+                    doSomethingElse()
+                }
+
+                fun doSomethingElse() {
+                    doSomething()
+                }
+
+       </script></code></pre></section>
+
+<!--        suspendCoroutineUninterceptedOrReturn   -->
+
+        <section>1 special function</section>
+
+        <section style="width: 130%; margin-left: -150px; font-size: 28px;"><pre class="kotlin" data-id="code-animation" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+
+@SinceKotlin("1.3")
+@InlineOnly
+@Suppress("UNUSED_PARAMETER", "RedundantSuspendModifier")
+public suspend inline fun <T> suspendCoroutineUninterceptedOrReturn(crossinline block: (Continuation<T>) -> Any?): T {
+        contract { callsInPlace(block, InvocationKind.EXACTLY_ONCE) }
+        throw NotImplementedError("Implementation of suspendCoroutineUninterceptedOrReturn is intrinsic")
+}
+
+       </script></code></pre></section>
+
+        <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin stretch" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+suspend fun fun1(){
+    println("1.1")
+    fun2()
+    println("1.2")
+}
+
+suspend fun fun2(){
+    println("2.1")
+    fun3()
+    println("2.2")
+}
+
+suspend fun fun3(){
+    println("3.1")
+    suspendCoroutineUnInterceptedOrReturn<Unit> { cont ->
+        thread{
+            Thread.sleep(2000)
+            cont.resumeWith(Result.success(Unit))
+        }
+        COROUTINE_SUSPENDED
+    }
+    println("3.2")
+}
+		</script></code></pre></section>
+
+
+        <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin stretch" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+fun fun1(cont: () -> Unit){
+    println("1.1")
+    fun2{
+        println("1.2")
+        cont()
+    }
+}
+
+fun fun2(cont: () -> Unit){
+    println("2.1")
+    fun3{
+        println("2.2")
+        cont()
+    }
+}
+
+fun fun3(cont: () -> Unit){
+    println("3.1")
+    thread{
+        Thread.sleep(2000)
+        println("3.2")
+        cont()
+    }
+}
+		</script></code></pre></section>
+
+
+        <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin stretch" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+fun fun1(cont: Continuation<Unit>){
+    println("1.1")
+    fun2{
+        println("1.2")
+        cont.resumeWith(...)
+    }
+}
+
+fun fun2(cont: Continuation<Unit>){
+    println("2.1")
+    fun3{
+        println("2.2")
+        cont.resumeWith(...)
+    }
+}
+
+fun fun3(cont: Continuation<Unit>){
+    println("3.1")
+    thread{
+        Thread.sleep(2000)
+        println("3.2")
+        cont.resumeWith(...)
+    }
+}
+		</script></code></pre></section>
+
+        <section style="font-size:30px; width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+suspend fun networkCall() {
+    println("Calling API ")
+    val responseCode = suspendCoroutineUninterceptedOrReturn<Int> { cont ->
+        thread{
+             try {
+                val connection = URL("https://google.com").openConnection()
+                connection.requestMethod = "GET"
+                cont.resumeWith(Result.success(connection.responseCode))
+            } catch (e: Exception) {
+                cont.resumeWith(Result.error(e))
+            }
+        }
+        COROUTINE_SUSPENDED
+    }
+    println("Server responded with $responseCode")
+}
+		</script></code></pre></section>
+
+
+        <section style="font-size:30px; width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+
+suspend fun doSomething() {
+    ...
+    networkCall()
+    ...
+}
+
+suspend fun networkCall() {
+    println("Calling API ")
+    val responseCode = suspendCoroutineUninterceptedOrReturn<Int> { cont ->
+        thread{
+             try {
+                val connection = URL("https://google.com").openConnection()
+                connection.requestMethod = "GET"
+                cont.resumeWith(Result.success(connection.responseCode))
+            } catch (e: Exception) {
+                cont.resumeWith(Result.error(e))
+            }
+        }
+        COROUTINE_SUSPENDED
+    }
+    println("Server responded with $responseCode")
+}
+		</script></code></pre></section>
+
+        <section><img src="/img/line-by-line-execution-of-coroutine.gif" ></section>
+
+        <section data-auto-animate>launch function</section>
+
+        <section style="width: 120%; margin-left: -80px; font-size:32px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers="1|2|3-4|6"> <script type="text/template">
+fun launch(block: suspend () -> Unit) {
+    val completionCallback = object : Continuation<Unit> {
+        override val context: CoroutineContext = EmptyCoroutineContext
+        override fun resumeWith(result: Result<Unit>) {}
+    }
+    block.createCoroutineUnintercepted(completionCallback).resumeWith(Result.success(Unit))
+}
+		</script></code></pre></section>
+
+        <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+fun main {
+    print("1")
+    launch {
+        print("2")
+    }
+    print("3")
+}
+		</script></code></pre></section>
+
+<!--        Dispatchers basic-->
+
+        <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+sealed class Dispatchers {
+    object Main : Dispatchers()
+    object Background : Dispatchers()
+}
+		</script></code></pre></section>
+
+        <section style="width: 110%; margin-left: -50px; font-size:32px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers="1|3-8|10-17|11-13|15-17"> <script type="text/template">
+fun launch(dispatcher: Dispatchers, block: suspend () -> Unit) {
+
+    val completionCallback = object : Continuation<Unit> {
+        override val context = EmptyCoroutineContext
+        override fun resumeWith(result: Result<Unit>) {}
+    }
+
+    val continuation = block.createCoroutineUnintercepted(completionCallback)
+
+    when (dispatcher) {
+        Dispatchers.Main -> Handler(Looper.getMainLooper()).post {
+            continuation.resumeWith(Result.success(Unit))
+        }
+
+        Dispatchers.Background -> thread {
+            continuation.resumeWith(Result.success(Unit))
+        }
+    }
+}
+		</script></code></pre></section>
+
+        <section style="width: 110%; margin-left: -50px; font-size:34px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers="1|2|3|4-10|11"> <script type="text/template">
+button.setOnClickListener{
+    launch(Dispatchers.Main) {
+        textView.text = "Downloading file"
+        suspendCoroutineUninterceptedOrReturn<Unit> { cont ->
+            thread {
+                downloader.download("http://example.com/file.txt")
+                cont.resumeWith(Result.success(Unit))
+            }
+            COROUTINE_SUSPENDED
+        }
+        textView.text = "Download Complete"
+    }
+}
+		</script></code></pre></section>
+
+
+        <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin stretch" ><code data-trim data-noescape data-line-numbers="1-24|17-24"> <script type="text/template">
+fun fun1(cont: Continuation<Unit>){
+    println("1.1")
+    fun2{
+        println("1.2")
+        cont()
+    }
+}
+
+fun fun2(cont: Continuation<Unit>){
+    println("2.1")
+    fun3{
+        println("2.2")
+        cont()
+    }
+}
+
+fun fun3(cont: Continuation<Unit>){
+    println("3.1")
+    thread{
+        Thread.sleep(2000)
+        println("3.2")
+        cont()
+    }
+}
+		</script></code></pre></section>
+
+<!--Resume on correct thread-->
+
+        <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers="1-9|2"> <script type="text/template">
+suspend fun doSomething(){
+    suspendCoroutineUninterceptedOrReturn<Unit> { cont ->
+        thread {
+            downloader.download("http://example.com/file.txt")
+            cont.resumeWith(Result.success(Unit))
+        }
+        COROUTINE_SUSPENDED
+    }
+}
+		</script></code></pre></section>
+
+        <section><img src="/img/continuation-declaration.png" ></section>
+
+<!--        CoroutineContext-->
+
+        <section style="font-size:34px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape> <script type="text/template">
+CoroutineContext ~ mapOf<CoroutineContext.Key<*>,CoroutineContext.Element>()
+		</script></code></pre></section>
+
+
+        <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers="1-6|1|2|5"> <script type="text/template">
+object DispatcherKey: CoroutineContext.Key<Dispatchers>{}
+sealed class Dispatchers: CoroutineContext.Element {
+    object Main : Dispatchers()
+    object Background : Dispatchers()
+    override val key = DispatcherKey
+}
+		</script></code></pre></section>
+
+        <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+object DispatcherKey: CoroutineContext.Key<Dispatchers>{}
+sealed class Dispatchers: CoroutineContext.Element {
+    object Main : Dispatchers()
+    object Background : Dispatchers()
+    override val key = DispatcherKey
+}
+
+val combined = EmptyCoroutineContext + Dispatchers.Main
+val original = combined.get(DispatcherKey)
+
+		</script></code></pre></section>
+
+        <section style="width: 120%; margin-left: -80px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers="1-9|9"> <script type="text/template">
+sealed class Dispatchers: CoroutineContext.Element {
+    object Main : Dispatchers()
+    object Background : Dispatchers()
+    override val key = DispatcherKey
+    companion object DispatcherKey: CoroutineContext.Key<Dispatchers>{}
+}
+
+val combined = EmptyCoroutineContext + Dispatchers.Main
+val original = combined.get(Dispatchers)
+
+		</script></code></pre></section>
+        <section style="width: 120%; margin-left: -80px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers="9"> <script type="text/template">
+sealed class Dispatchers: CoroutineContext.Element {
+    object Main : Dispatchers()
+    object Background : Dispatchers()
+    override val key = DispatcherKey
+    companion object DispatcherKey: CoroutineContext.Key<Dispatchers>{}
+}
+
+val combined = EmptyCoroutineContext + Dispatchers.Main
+val original = combined[Dispatchers]
+
+		</script></code></pre></section>
+
+        <section style="width: 120%; margin-left: -80px; font-size:38px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers="1-14|3|4-6|8-10"> <script type="text/template">
+suspendCoroutineUninterceptedOrReturn<Unit> { cont ->
+        thread {
+            when (cont.context[Dispatchers]) {
+                Dispatchers.Main -> Handler(Looper.getMainLooper()).post {
+                    cont.resumeWith(Result.success(Unit))
+                }
+
+                Dispatchers.Background -> thread {
+                    cont.resumeWith(Result.success(Unit))
+                }
+            }
+        }
+        COROUTINE_SUSPENDED
+    }
+		</script></code></pre></section>
+
+<!--        duplicate dispatch-->
+
+
+        <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+class DispatchedContinuation<T>(
+    override val context: CoroutineContext,
+    val continuation: Continuation<T>
+) : Continuation<T> {
+    override fun resumeWith(result: Result<T>) {
+        when (context as Dispatcher) {
+            Dispatchers.Main -> Handler(Looper.getMainLooper()).post {
+                continuation.resumeWith(result)
+            }
+            Dispatchers.Background -> thread {
+                continuation.resumeWith(result)
+            }
+        }
+    }
+}
+		</script></code></pre></section>
+
+        <section style="width: 120%; margin-left: -80px; font-size:34px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+suspendCoroutineUninterceptedOrReturn<Unit> { cont ->
+        thread {
+            Thread.sleep(2000)
+            DispatchedContinuation(cont.context, cont).resumeWith(Result.success(Unit))
+        }
+        COROUTINE_SUSPENDED
+    }
+		</script></code></pre></section>
+
+        <section style="width: 110%; margin-left: -50px; font-size:34px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+
+fun launch(dispatcher: Dispatcher, block: suspend () -> Unit) {
+    val callback = object : Continuation<Unit> {
+        override val context = dispatcher
+
+        override fun resumeWith(result: Result<Unit>) {}
+    }
+    val coroutine = block.createCoroutineUnintercepted(callback)
+    DispatchedContinuation(dispatcher, coroutine).resumeWith(Result.success(Unit))
+}
+
+		</script></code></pre></section>
+
+        <section style="width: 110%; margin-left: -50px; font-size:34px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers="1|2|3|4-10|11"> <script type="text/template">
+button.setOnClickListener{
+    launch(Dispatchers.Main) {
+        textView.text = "Downloading file"
+        suspendCoroutineUninterceptedOrReturn<Unit> { cont ->
+            thread {
+                downloader.download("http://example.com/file.txt")
+                DispatchedContinuation(cont.context,cont).resumeWith(Result.success(Unit))
+            }
+            COROUTINE_SUSPENDED
+        }
+        textView.text = "Download Complete"
+    }
+}
+		</script></code></pre></section>
+
+<!--        splitting dispatchers io, default, improving using threadpool-->
+
+        <section style="width: 110%; margin-left: -50px; font-size:34px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+class DispatchedContinuation<T>(
+    override val context: CoroutineContext,
+    val continuation: Continuation<T>
+) : Continuation<T> {
+    override fun resumeWith(result: Result<T>) {
+        when (context as Dispatcher) {
+            Dispatchers.Main -> Handler(Looper.getMainLooper()).post {
+                continuation.resumeWith(result)
+            }
+            Dispatchers.Background -> thread {
+                continuation.resumeWith(result)
+            }
+        }
+    }
+}
+		</script></code></pre></section>
+
+        <section style="width: 110%; margin-left: -50px;  font-size:34px" data-auto-animate><pre class="kotlin stretch" ><code data-trim data-noescape data-line-numbers="7-9|11-13|15-17|19|21-29"> <script type="text/template">
+class DispatchedContinuation<T>(
+    override val context: CoroutineContext,
+    val continuation: Continuation<T>
+) : Continuation<T> {
+    override fun resumeWith(result: Result<T>) {
+        when (context as Dispatcher) {
+            Dispatchers.Main -> Handler(Looper.getMainLooper()).post {
+                continuation.resumeWith(result)
+            }
+
+            Dispatchers.Default -> defaultThreadPool.submit {
+                continuation.resumeWith(result)
+            }
+
+            Dispatchers.IO -> ioThreadPool.submit {
+                continuation.resumeWith(result)
+            }
+
+            Dispatchers.Unconfined -> continuation.resumeWith(result)
+
+            Dispatchers.MainImmediate -> {
+                if(Looper.getMainLooper() == Looper.myLooper()){
+                    continuation.resumeWith(result)
+                }else{
+                    Handler(Looper.getMainLooper()).post {
+                        continuation.resumeWith(result)
+                    }
+                }
+            }
+        }
+    }
+}
+		</script></code></pre></section>
+
+         <section data-auto-animate><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers> <script type="text/template">
+            suspend fun CoroutineScope.print() {
+                for(x in 1..5){
+                    launch{
+                        delay(100)
+                        print(x)
+                    }
+                }
+            }
+		</script></code></pre></section>
+
+         <section data-auto-animate><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers="2|7"> <script type="text/template">
+            fun main(){
+                GlobalScope.launch { print() }
+                // 25314
+                // 52341
+                // 42315
+
+                runBlocking { print() }
+                // 12345
+                // 12345
+                // 12345
+            }
+
+            suspend fun CoroutineScope.print() {
+                for(x in 1..5){
+                    launch{
+                        delay(100)
+                        print(x)
+                    }
+                }
+            }
+		</script></code></pre></section>
+
+<!--        withContext-->
+        <section> withContext </section>
+
+<section style="width: 110%; margin-left: -50px; font-size:32px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers="1|1|2|3-9|10|11|12"> <script type="text/template">
+suspend fun withContext(dispatcher: Dispatcher, block: suspend () -> Unit) {
+    suspendCoroutineUninterceptedOrReturn<Unit> { cont ->
+        val callback = object : Continuation<Unit> {
+            override val context = EmptyCoroutineContext
+
+            override fun resumeWith(result: Result<Unit>) {
+                DispatchedContinuation(cont.context, cont).resumeWith(result)
+            }
+        }
+        val coroutine = block.createCoroutineUnintercepted(callback)
+        DispatchedContinuation(dispatcher, coroutine).resumeWith(Result.success(Unit))
+        COROUTINE_SUSPENDED
+    }
+}
+		</script></code></pre></section>
+
+        <section style="width: 110%; margin-left: -50px; font-size:32px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers="1|1-14"> <script type="text/template">
+suspend fun <R> withContext(dispatcher: Dispatcher, block: suspend () -> R): R {
+    return suspendCoroutineUninterceptedOrReturn<R> { cont ->
+        val callback = object : Continuation<R> {
+            override val context = dispatcher
+
+            override fun resumeWith(result: Result<R>) {
+                DispatchedContinuation(cont.context, cont).resumeWith(result)
+            }
+        }
+        val coroutine = block.createCoroutineUnintercepted(callback)
+        DispatchedContinuation(dispatcher, coroutine).resumeWith(Result.success(Unit))
+        COROUTINE_SUSPENDED
+    }
+}
+		</script></code></pre></section>
+        <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+launch(Dispatchers.Main){
+    println("Download Started")
+    withContext(Dispatchers.IO) {
+        println("Download in progress")
+        downloader.download()
+    }
+    println("Download Complete")
+}
+		</script></code></pre></section>
+
+        <section><img src="/img/actual-withcontext.png"Z ></section>
+
+        <section> suspend fun blocks too! </section>
+          <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+suspend fun download(){
+    println("Download Started")
+    withContext(Dispatchers.IO) {
+        println("Download in progress")
+        downloader.download()
+    }
+    println("Download Complete")
+}
+		</script></code></pre></section>
+
+        <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+suspendCoroutineUninterceptedOrReturn<Unit> { cont ->
+    Compressor.compress(image, onSuccess = {
+            DispatchedContinuation(cont.context, cont)
+            .resumeWith(Result.success(Unit))
+    })
+    COROUTINE_SUSPENDED
+}
+		</script></code></pre></section>
+
+<!--suspendCoroutine-->
+
+        <section style="width: 110%; margin-left: -50px; font-size:34px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+suspend fun <T> suspendCoroutine(block: (Continuation<T>) -> Unit): T {
+    return suspendCoroutineUninterceptedOrReturn { cont ->
+        val dispatchedContinuation = DispatchedContinuation(cont.context, cont)
+        block(dispatchedContinuation)
+        COROUTINE_SUSPENDED
+    }
+}
+		</script></code></pre></section>
+
+        <section><img src="/img/suspend-coroutine-declaration.webp"Z ></section>
+
+        <!-- createCoroutine -->
+
+        <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+fun <T> (suspend () -> T).createCoroutine(
+    completion: Continuation<T>
+): Continuation<Unit> {
+    val coroutine = createCoroutineUnintercepted(completion)
+    return DispatchedContinuation(completion.context,coroutine)
+}
+		</script></code></pre></section>
+
+        <section><img src="/img/create-coroutine-declaration.webp" ></section>
+
+<!--        <section>Facts about Dispatchers</section>-->
+
+        <section>Every statement in the coroutine will always run in same dispatcher
+        </section>
+
+        <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+launch(Dispatchers.Main){
+    println("Download Started")
+    withContext(Dispatchers.IO) {
+        println("Download in progress")
+        downloader.download()
+    }
+    println("Download Complete")
+}
+		</script></code></pre></section>
+
+        <section>Dispatcher != Thread
+        </section>
+        <section>coroutines do not declare what thread they run on, they declare what dispatcher
+            they run on
+        </section>
+
+<!--        Delay-->
+
+        <section>Delay</section>
+
+        <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+suspend fun delay(time: Int){
+    Thread.sleep(time)
+}
+		</script></code></pre></section>
+
+        <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+suspend fun delay(time: Int){
+    withContext(Dispatchers.IO){
+        Thread.sleep(time)
+    }
+}
+		</script></code></pre></section>
+
+        <section><img src="/img/actual-delay.png" ></section>
+
+<!--        <section>Delay vs Sleep</section>-->
+
+        <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+fun main() = runBlocking {
+    repeat(50_000) {
+        launch(Dispatchers.Main) {
+            delay(5000L)
+            print(".")
+        }
+    }
+}
+		</script></code></pre></section>
+
+        <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+fun main() {
+    repeat(50_000) {
+        Handler(Looper.getMainLooper()).postDelayed({
+            print(".")
+        },5000L)
+    }
+}
+		</script></code></pre></section>
+        <section data-auto-animate><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers="2|7"> <script type="text/template">
+                            suspend fun waitSomeTime() {
+                                withContext(Dispatchers.Default){
+                                    delay(2000L)
+                                }
+                            }
+        </script></code></pre></section>
+        <section data-auto-animate><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers> <script type="text/template">
+                            fun main(){
+                                runBlocking(Dispatchers.Unconfined) {
+                                    println("$currentThread")
+                                    delay(1.seconds)
+                                    println("$currentThread")
+                                }
+                            }
+        </script></code></pre></section>        <section data-auto-animate><pre class="kotlin" data-id="code-animation"><code data-trim data-noescape data-line-numbers> <script type="text/template">
+                            fun main(){
+                                runBlocking(Dispatchers.Unconfined) {
+                                    println("$currentThread")
+                                    delay(1.seconds)
+                                    println("$currentThread")
+                                }
+                            }
+                            // main
+                            // kotlinx.coroutines.DefaultExecutor
+        </script></code></pre></section>
+<!--        Structured Concurrency-->
+
+        <section>Structured Concurrency</section>
+
+        <section><img src="/img/threads-not-following-structured-concurrency.png" ></section>
+        <section><img src="/img/intro-structured-concurrency-in-coroutines.png" ></section>
+        <section><img src="/img/intro-nested-structured-concurrency-in-coroutines.png" ></section>
+
+        <section style=" font-size:32px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers="1-17|2|3|4-13|4|5|6-8|9|10-12|13|14|16|1-18"> <script type="text/template">
+fun main() {
+    runBlocking {
+        val timeTaken = measureTimeMillis {
+            async(Dispatchers.IO) {
+                delay(1.seconds)
+                launch {
+                    delay(4.seconds)
+                }
+                delay(1.seconds)
+                launch {
+                    delay(2.seconds)
+                }
+                delay(1.seconds)
+            }.await()
+        }
+        println("async await took $timeTaken ms")
+    }
+}
+		</script></code></pre></section>
+
+<!--        <section style="width: 110%; margin-left: -50px;" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers=""> <script type="text/template">-->
+<!--fun main(){-->
+<!--   val timeTaken = measureTimeMillis {-->
+<!--            async(Dispatchers.IO) {-->
+<!--                delay(1.seconds)-->
+<!--                launch {-->
+<!--                    delay(4.seconds)-->
+<!--                }-->
+<!--                delay(1.seconds)-->
+<!--                launch {-->
+<!--                    delay(2.seconds)-->
+<!--                }-->
+<!--                delay(1.seconds)-->
+<!--            }.await()-->
+<!--        }-->
+<!--    println("async await took $timeTaken ms")-->
+<!--}-->
+<!--		</script></code></pre></section>-->
+
+        <section><img src="/img/timeline-structured-concurrency-async.png" ></section>
+        <section>When a coroutine finishes, it needs to wait for its children</section>
+
+        <section style="width: 110%; margin-left: -50px; font-size:32px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers="1-11|3-6|5"> <script type="text/template">
+fun launch(dispatcher: Dispatchers, block: suspend () -> Unit) {
+
+    val completionCallback = object : Continuation<Unit> {
+        override val context = EmptyCoroutineContext
+        override fun resumeWith(result: Result<Unit>) {}
+    }
+
+    val continuation = block.createCoroutineUnintercepted(completionCallback)
+
+    DispatchedContinuation(dispatcher,continuation).resumeWith(Result.success(Unit))
+}
+		</script></code></pre></section>
+
+        <section style="width: 110%; margin-left: -50px; font-size:32px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers="5-7|1"> <script type="text/template">
+fun launch(context: CoroutineContext, block: suspend () -> Unit) {
+
+    val completionCallback = object : Continuation<Unit> {
+        override val context = context
+        override fun resumeWith(result: Result<Unit>) {
+            context[Job]?.waitForChildren()
+        }
+    }
+
+    val continuation = block.createCoroutineUnintercepted(completionCallback)
+
+    DispatchedContinuation(dispatcher,continuation).resumeWith(Result.success(Unit))
+}
+		</script></code></pre></section>
+
+        <section> Cancellation </section>
+<!--        Cancellation-->
+
+        <section style="width: 110%; margin-left: -50px; font-size:28px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers="1-12|16|17|21|1-12"> <script type="text/template">
+class MyAsyncTask : AsyncTask<Void, Void, Void>() {
+
+    override fun onPreExecute() { ... }
+
+    override fun doInBackground(vararg params: Void?) {
+        for (i in 0..10) {
+            uploader.upload(...)
+        }
+    }
+
+    override fun onPostExecute(result: Void) { ... }
+}
+
+...
+
+task = MyAsyncTask()
+task.execute()
+
+...
+
+task.cancel()
+		</script></code></pre></section>
+
+
+        <section style="width: 110%; margin-left: -50px; font-size:28px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers="7"> <script type="text/template">
+class MyAsyncTask : AsyncTask<Void, Void, Void>() {
+
+    override fun onPreExecute() { ... }
+
+    override fun doInBackground(vararg params: Void?) {
+        for (i in 0..10) {
+            if(isCancelled){ return }
+            uploader.upload(...)
+        }
+    }
+
+    override fun onPostExecute(result: Void) { ... }
+}
+
+...
+
+task = MyAsyncTask()
+task.execute()
+
+...
+
+task.cancel()
+		</script></code></pre></section>
+
+
+        <section style="font-size:28px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+suspend fun ensureActive(){
+
+}
+		</script></code></pre></section>
+
+        <section style="font-size:28px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+suspend fun ensureActive(){
+    suspendCoroutine{ cont ->
+        if(!cont.context[Job]!!.isActive){
+            throw CancellationException()
+        }else{
+            cont.resumeWith(Result.success(Unit))
+        }
+    }
+}
+		</script></code></pre></section>
+
+        <section style="font-size:28px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers="7"> <script type="text/template">
+suspend fun ensureActive(){
+    if(!coroutineContext[Job]!!.isActive){
+        throw CancellationException()
+    }
+}
+		</script></code></pre></section>
+
+<!--        Scopes -->
+
+        <section style="font-size:28px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+val job = Job()
+launch(job){
+
+}
+launch(job){
+
+}
+launch(job){
+
+}
+job.cancel()
+		</script></code></pre></section>
+
+        <section style="font-size:28px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+interface CoroutineScope{
+    val context: CoroutineContext
+    fun cancel(){
+        context[Job]?.cancel() ?: error("Cannot cancel scope without job!")
+    }
+}
+
+object GlobalScope: CoroutineScope{
+      override val context: CoroutineContext = EmptyCoroutineContext
+}
+
+val viewModelScope = object: CoroutineScope{
+      override val context: CoroutineContext = Dispatchers.Main + Job()
+}
+		</script></code></pre></section>
+        <section>Modifying launch to support cancellation</section>
+        <section><img src="/img/create-coroutine-unintercepted.png"Z ></section>
+
+        <section style="width: 120%; margin-left: -80px; font-size:30px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers="1|3|4-6|9|1-16"> <script type="text/template">
+fun CoroutineScope.launch(extraContext: CoroutineContext, block: suspend CoroutineScope.() -> Unit) {
+
+    val completionCallback = object : Continuation<Unit>, CoroutineScope, Job {
+        init{
+            context[Job]?.addChildren(this)
+        }
+        override val context = scopeContext + extraContext + this
+        override fun resumeWith(result: Result<Unit>) {
+            context[Job]?.waitForChildren()
+        }
+    }
+
+    val continuation = block.createCoroutineUnintercepted(completionCallback,completionCallback)
+
+    DispatchedContinuation(dispatcher,continuation).resumeWith(Result.success(Unit))
+}
+		</script></code></pre></section>
+
+        <section style="font-size:28px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+suspend fun print(){
+    CoroutineScope(Dispatchers.IO){
+        launch{
+            while(true){ println("Hello") }
+        }
+    }
+}
+		</script></code></pre></section>
+
+        <section style="font-size:28px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+suspend fun print(){
+    CoroutineScope(Dispatchers.IO){
+        launch{
+            while(true){ ensureActive(); println("Hello") }
+        }
+    }
+}
+		</script></code></pre></section>
+
+        <section style="font-size:28px" data-auto-animate><pre class="kotlin" ><code data-trim data-noescape data-line-numbers> <script type="text/template">
+suspend fun print(){
+    withContext(Dispatchers.IO){
+        launch{
+            while(true){ ensureActive(); println("Hello") }
+        }
+    }
+}
+		</script></code></pre></section>
+
+        <section>
+            <h3>Is it that simple?</h3>
+            <p>
+                <span class="fragment">Things we did not consider</span>
+            </p>
+            <p>
+                <span class="fragment">Race conditions, Deadlocks</span>
+            </p>
+            <p>
+                <span class="fragment">Multi language support</span>
+            </p>
+            <p>
+                <span class="fragment">Edge cases</span>
+            </p>
+            <p>
+                <span class="fragment">Performance optimizations</span>
+            </p>
+            <p>
+                <span class="fragment">Flows, sequences, channels, actors, Mutexes, selects</span>
+            </p>
+            <p>
+                <span class="fragment">Exception handling</span>
+            </p>
+        </section>
+
+        <section> github.com/Kotlin/kotlinx.coroutines </section>
+
+        <section data-auto-animate
+                 data-background="https://images.pexels.com/photos/2387533/pexels-photo-2387533.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2">
+            <img width="300px" height="300px"
+                 data-src="img/qr-code.webp">
+            <p style="font-size:70px;">In depth coroutines</p>
+        </section>
+        <section data-auto-animate
+                 data-background="https://images.pexels.com/photos/2387533/pexels-photo-2387533.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2">
+            <img width="300px" height="300px"
+                 data-src="img/qr-code.webp">
+            <p style="font-size:70px;">In depth coroutines</p>
+            <p>Linkedin @omkartenkale</p>
+            <p>Twitter @omkartenkale</p>
+        </section>
+
+    </div>
+</div>
+
+<script src="dist/reveal.js"></script>
+<script src="plugin/notes/notes.js"></script>
+<script src="plugin/markdown/markdown.js"></script>
+<script src="plugin/highlight/highlight.js"></script>
+<link rel="stylesheet" href="plugin/highlight/androidstudio.css">
+<script>
+			// More info about initialization & config:
+			// - https://revealjs.com/initialization/
+			// - https://revealjs.com/config/
+			Reveal.initialize({
+				hash: true,
+				controls: false,
+                progress: false,
+                slideNumber: true,
+                showSlideNumber: 'speaker',
+                 loop: true,
+                 slideNumber: 'c/t' ,
+
+				// Learn about plugins: https://revealjs.com/plugins/
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+			});
+</script>
+
+<script>
+  const socket = new WebSocket("ws://192.168.0.61:8888");
+console.log("WebSocket connection in progress.");
+  // Event handler for WebSocket open
+  socket.onopen = () => {
+    console.log("WebSocket connection established.");
+  };
+
+  // Event handler for WebSocket errors
+  socket.onerror = (error) => {
+    console.error("WebSocket error:", error);
+  };
+
+  // Event handler for WebSocket close
+  socket.onclose = () => {
+    console.log("WebSocket connection closed.");
+  };
+
+  socket.onmessage = (event) => {
+    try {
+      const payload = JSON.parse(event.data);
+      const command = payload.command;
+
+      switch (command) {
+        case "next":
+          Reveal.next(); // Navigate to the next slide
+          break;
+
+        case "previous":
+          Reveal.prev(); // Navigate to the previous slide
+          break;
+
+        default:
+          console.log("Unknown command:", command);
+          break;
+      }
+    } catch (error) {
+      console.error("Error parsing or processing incoming message:", error);
+    }
+  };
+
+</script>
+
+</body>
+</html>
